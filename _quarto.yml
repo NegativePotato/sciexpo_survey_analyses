@@ -2,6 +2,16 @@ project:
   type: website
   output-dir: docs
 
+date: today
+toc: true
+toc-depth: 5
+# toc-expand: true
+number-sections: true
+highlight-style: pygments
+toc-location: left
+reference-location: margin
+citation-location: margin
+
 website:
   title: "Sciexpo Survey Analyses"
   navbar:
@@ -12,6 +22,8 @@ website:
 
 format:
   html:
+    code-fold: true
+    html-math-method: katex
     theme:
       - cosmo
       - brand

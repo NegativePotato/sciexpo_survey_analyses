@@ -181,7 +181,7 @@ combined_long.df <-
   arrange(survey_id, prepost, questionnaire, item_nbr) %>% 
   mutate(score = responses_str_to_nbr(response))
   
-
+write.csv(combined_long.df, file = file.path(table_dir, "all_participants_long.csv"))
 
 ```
 
@@ -204,13 +204,6 @@ ids_in_both_sessions.df <- which_sessions.df %>%
   filter(session_completed %in% c('pre', 'post')) %>% 
   .$survey_id
 
-# TODO: 
-# Everyone who did pre-test -> baseline scores according to demographic question 
-# Baseline DVs
-#   - Full SSI scale 
-# Pre-Post DVS
-#   - Same as above 
-   
 ```
 
 ```{r under-represented-count}
@@ -242,6 +235,9 @@ attend_last_year_count.df <- combined_long_only_full_participants.df %>%
   unique(.) %>%
   count(attend_sciexpo_last_year, under_represented)
 attend_last_year_count.df
+
+write.csv(combined_long_only_full_participants.df, file = file.path(table_dir, "participants_who_answered_both_surveys_long.csv"))
+
 ```
 
 In total, we collected responses from `n_nonhurm` students, with `n_hurm` from historically under-represented minorities (HURM) and `n_nonhurm` not from historically under-represented minorities (Non-HURM). Note that we do not have this information for `n_hurm_na` students because they only completed the post-test survey, and we only asked this information in the pre-test survey. 
