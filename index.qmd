@@ -1,0 +1,598 @@
+---
+title: "Sci-Expo Survey 2025-2026"
+author: "Freya Joessel"
+editor: source
+date: today
+toc: true
+toc-depth: 5
+# toc-expand: true
+number-sections: true
+highlight-style: pygments
+toc-location: left
+reference-location: margin
+citation-location: margin
+format:
+  html: 
+    code-fold: true
+    html-math-method: katex
+---
+
+# Quick facts
+
+```{r preamble}
+#| echo: false
+#| include: false
+
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(here)
+library(Hmisc)
+
+data_dir <- file.path(here(), "Data")
+```
+
+```{r functions}
+#| echo: false
+#| include: false
+
+responses_str_to_nbr <- function(response_str) {
+  likert_1_str <- c("Strongly disagree", 
+                    "Extremely unlikely", 
+                    "Not at all represented")
+  likert_2_str <- c("Somewhat disagree", 
+                    "Somewhat unlikely", 
+                    "A little bit represented")
+  likert_3_str <- c("Neither agree nor disagree", 
+                    "Neither likely nor unlikely", 
+                    "Somewhat represented")
+  likert_4_str <- c("Somewhat agree", 
+                    "Somewhat likely", 
+                    "Mostly represented")
+  likert_5_str <- c("Strongly agree", 
+                    "Extremely likely", 
+                    "Completely represented")
+  
+  response_nbr <- case_when(
+    response_str %in% likert_1_str ~ 1,
+    response_str %in% likert_2_str ~ 2,
+    response_str %in% likert_3_str ~ 3,
+    response_str %in% likert_4_str ~ 4,
+    response_str %in% likert_5_str ~ 5,
+  )
+}
+```
+
+
+```{r merge-datasets}
+#| echo: false
+#| include: false
+
+# Load Data
+pre_raw.df <- read_excel(file.path(data_dir, "SciExpo - Pre-Test ANON - 2025 (Responses).xlsx"), skip = 1) 
+post_raw.df <- read_excel(file.path(data_dir, "SciExpo - Post-Test ANON - 2025 (Responses).xlsx"), skip = 1)
+
+# Rename the columns appropriately
+pre_raw.df <- pre_raw.df %>%
+  select(!...2) %>% 
+  relocate(survey_id) 
+names(pre_raw.df)[2:20] <- paste0(names(pre_raw.df)[2:20], "_pre")
+
+post_raw.df <- post_raw.df %>%
+  select(!...2) %>% 
+  relocate(survey_id) 
+names(post_raw.df)[2:20] <- paste0(names(post_raw.df)[2:20], "_post")
+
+# Check number of rows and unique entries
+n_row_pre <- nrow(pre_raw.df)
+n_unique_ids_pre <- length(unique(pre_raw.df$survey_id))
+
+n_row_post <- nrow(post_raw.df)
+n_unique_ids_post <- length(unique(post_raw.df$survey_id))
+
+sprintf("nbr of rows pre: %i", n_row_pre)
+sprintf("nbr of unique IDs pre: %i", n_unique_ids_pre)
+sprintf("nbr of rows post: %i", n_row_post)
+sprintf("nbr of unique IDs post: %i", n_unique_ids_post)
+
+count_rows_pre.df <- pre_raw.df %>% 
+  count(survey_id) %>% 
+  arrange(desc(n))
+duplicate_row_id <- count_rows_pre.df %>% 
+  filter(n == 2) %>% 
+  .$survey_id
+
+sprintf("survey id of duplicate row: %i", duplicate_row_id)
+
+pre_raw_duplicate.df <- pre_raw.df %>% 
+  filter(survey_id == duplicate_row_id)
+print(pre_raw_duplicate.df)
+
+sprintf("We only keep the first entry...")
+pre_clean.df <- pre_raw.df %>% 
+  filter(as.character(timestamp_pre) != "2025-10-09 10:56:59.474")
+
+# Merge the pre and post datasets
+combined_wide.df <- merge(pre_clean.df, post_raw.df, all = T)
+
+## SSI 
+ssi_long.df <- 
+  tidyr::pivot_longer(
+    combined_wide.df %>% select(survey_id, contains("ssi")), 
+    cols = contains("ssi"),
+    values_to = "response",
+    names_to = c("questionnaire", "item_nbr", "item_id", "prepost"),
+    names_pattern = "(.*)_(.*)_(.*)_(.*)"
+    ) %>% 
+  mutate(subscale = case_when(grepl("^p", item_id) ~ "Peformance", 
+                              grepl("^i", item_id) ~ "Interest",
+                              grepl("^c", item_id) ~ "Competence",
+                              grepl("^r", item_id) ~ "Recognition"),
+         subscale_item_nbr = as.character(gsub("^[a-z]", "",item_id)))
+
+## Representation in Science 
+representation.df <- 
+  tidyr::pivot_longer(
+    combined_wide.df %>% 
+      select(survey_id, matches("likely|represented_in")), 
+    cols = matches("likely|represented_in"),
+    values_to = "response",
+    names_to = c("questionnaire", "prepost"),
+    names_pattern = "(.*)_([^_]+)"
+    ) 
+## Feedback
+feedback.df <- 
+  tidyr::pivot_longer(
+    combined_wide.df %>% 
+      select(survey_id, matches("feelings|valuable|to_improve|other_comments")), 
+    cols = matches("feelings|valuable|to_improve|other_comments"),
+    values_to = "response",
+    names_to = "questionnaire"
+    ) %>% 
+  mutate(prepost = "post")
+## Time stamps
+timestamps.df <- 
+  tidyr::pivot_longer(
+    combined_wide.df %>% 
+      select(survey_id, timestamp_pre, timestamp_post), 
+    cols = matches("timestamp"),
+    values_to = "timestamp",
+    names_to = c("prepost"),
+    names_pattern = "timestamp_(.*)",
+    values_drop_na = T
+    ) 
+## Participant data
+demographics_data.df <- combined_wide.df %>% 
+  select(survey_id, under_represented, attend_sciexpo_this_year, 
+         attend_sciexpo_last_year, current_grade, ap_science_enrolled) %>% 
+  mutate(under_represented = ifelse(under_represented == "Yes", 
+                                    "HURM", "Non-\nHURM")) %>% 
+  mutate(under_represented = factor(under_represented, 
+                                    levels = c("Non-\nHURM", "HURM")))
+
+## Merge datasets
+combined_long.df <- 
+  bind_rows(ssi_long.df, representation.df, feedback.df) %>% 
+  merge(., timestamps.df) %>% 
+  merge(., demographics_data.df) %>% 
+  mutate(prepost = factor(prepost, levels = c("pre", "post")), 
+         item_nbr = as.numeric(item_nbr),
+         subscale = ifelse(is.na(subscale), questionnaire, subscale)) %>% 
+  arrange(survey_id, prepost, questionnaire, item_nbr) %>% 
+  mutate(score = responses_str_to_nbr(response))
+  
+
+
+```
+
+```{r ids-which-sessions}
+#| echo: false
+#| include: false
+
+# Find the IDs that are in both sessions
+which_sessions.df <- combined_long.df %>% 
+  filter(!is.na(score)) %>%
+  select(survey_id, prepost) %>% 
+  unique(.) %>% 
+  group_by(survey_id) %>% 
+  dplyr::summarize(session_completed = paste(prepost, collapse = " & ")) 
+
+which_sessions_count.df <- which_sessions.df %>% 
+  count(session_completed)
+
+ids_in_both_sessions.df <- which_sessions.df %>% 
+  filter(session_completed %in% c('pre', 'post')) %>% 
+  .$survey_id
+
+# TODO: 
+# Everyone who did pre-test -> baseline scores according to demographic question 
+# Baseline DVs
+#   - Full SSI scale 
+# Pre-Post DVS
+#   - Same as above 
+   
+```
+
+```{r under-represented-count}
+#| echo: false
+#| include: false
+
+under_represented_count.df <- combined_long.df %>% 
+  select(survey_id, under_represented) %>% 
+  unique() %>% 
+  count(under_represented)
+n_nonhurm <- under_represented_count.df %>% filter(under_represented == "Non-\nHURM") %>% .$n
+n_hurm <- under_represented_count.df %>% filter(under_represented == "HURM") %>% .$n
+n_hurm_na <- under_represented_count.df %>% filter(is.na(under_represented)) %>% .$n
+
+```
+
+```{r keep-only-full-dataset}
+#| echo: false
+#| include: false
+
+combined_long.df <- merge(combined_long.df, which_sessions.df)
+
+combined_long_only_full_participants.df <- combined_long.df %>% 
+  filter(!(session_completed %in% c('pre', 'post')))
+
+attend_last_year_count.df <- combined_long_only_full_participants.df %>% 
+  filter(attend_sciexpo_this_year == "Yes") %>% 
+  select(survey_id, attend_sciexpo_last_year, under_represented) %>%
+  unique(.) %>%
+  count(attend_sciexpo_last_year, under_represented)
+attend_last_year_count.df
+```
+
+In total, we collected responses from `n_nonhurm` students, with `n_hurm` from historically under-represented minorities (HURM) and `n_nonhurm` not from historically under-represented minorities (Non-HURM). Note that we do not have this information for `n_hurm_na` students because they only completed the post-test survey, and we only asked this information in the pre-test survey. 
+
+The number of participants who completed each survey is as follows: 
+```{r which-sessions-display}
+#| echo: false
+
+print(as.data.frame(which_sessions_count.df))
+```
+
+
+# Descriptives
+
+```{r descriptive-functions}
+#| echo: false
+#| include: false
+
+compute_dvs <- function(df, var) {
+  output.df <- df %>%
+    dplyr::reframe(mean = mean({{ var }}),
+                   median = median({{ var }}), 
+                   sd = sd({{ var }}), 
+                   ci95_low = smean.cl.boot({{ var }})[2],
+                   ci95_high = smean.cl.boot({{ var }})[3], 
+                   n = n()) %>% 
+    mutate(subscale_str_for_plot = case_when(
+      subscale == "Competence" ~ "SSI\nCompetence", 
+      subscale == "Interest" ~ "SSI\nInterest", 
+      subscale == "Recognition" ~ "SSI\nRecognition", 
+      subscale == "Peformance" ~ "SSI\nPeformance", 
+      subscale == "likely_become_scientist" ~ "Likely\nScientist", 
+      subscale == "represented_in_science" ~ "Science\nRepresentation", 
+    ))
+  return(output.df)
+}
+
+```
+
+```{r descriptive-plot-function}
+#| echo: false
+#| include: false
+
+make_descriptive_plot <- function(data, title_str = NULL, version = "prepost") {
+  prepost_descriptives.plot <- ggplot(data = data) +
+    geom_col(aes(x = under_represented, y = mean, fill = under_represented, 
+                 alpha = prepost), 
+             position = position_dodge(width = 0.8), width = 0.7) + 
+    geom_errorbar(aes(x = under_represented, ymin = ci95_low, ymax = ci95_high, group = prepost),
+                  position = position_dodge(width = 0.8), width = 0.3) +
+    geom_point(aes(x = under_represented, y = mean, group = prepost),
+                  position = position_dodge(width = 0.8), size = 1.5) + 
+    facet_grid(. ~ subscale_str_for_plot) + 
+    ylab("Score") + 
+    ylim(0,5) +
+    theme_bw() + 
+    theme(axis.title.x = element_blank(), legend.position = "none") + 
+    scale_fill_manual(values = c("#648FFF", "#DC267F")) + 
+    scale_alpha_manual(values = c(0.7, 1))
+  
+  if(!is.null(title_str)) {
+    prepost_descriptives.plot <- prepost_descriptives.plot + 
+      ggtitle(title_str)
+  }
+    
+  return(prepost_descriptives.plot)
+}
+```
+
+## Baseline descriptives
+
+```{r baseline-descriptives}
+#| echo: false
+#| include: false
+
+baseline_long_by_participant.df <- combined_long.df %>% 
+  filter(prepost == "pre", 
+         !is.na(score)) %>%
+  group_by(survey_id, questionnaire, subscale, under_represented, prepost,
+           attend_sciexpo_this_year, attend_sciexpo_last_year) %>% 
+  dplyr::summarise(score_aggregate = mean(score))
+```
+
+### Students who did not attend last year
+
+```{r baseline-plot-not-last-year}
+#| echo: false
+#| include: false
+
+baseline_long_aggregated_not_last_year.df <- 
+  baseline_long_by_participant.df %>% 
+  group_by(questionnaire, subscale, under_represented, prepost,
+           attend_sciexpo_last_year) %>% 
+  compute_dvs(score_aggregate)
+
+baseline_long_aggregated_not_last_year.df <- 
+  baseline_long_aggregated_not_last_year.df %>% 
+  filter(attend_sciexpo_last_year == "No")
+
+sample_sizes_all.df <- baseline_long_aggregated_not_last_year.df %>% 
+  select(under_represented, n) %>% 
+  unique()
+n_nonhurm <- sample_sizes_all.df %>% filter(under_represented == "Non-\nHURM") %>% .$n
+n_hurm <- sample_sizes_all.df %>% filter(under_represented == "HURM") %>% .$n
+
+baseline_descriptives_not_last_year.plot <- 
+  make_descriptive_plot(data = baseline_long_aggregated_not_last_year.df, 
+                        title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
+                                            n_nonhurm, n_hurm), 
+                        version = "baseline")
+```
+
+```{r baseline-plot-not-last-year-display}
+#| echo: false
+
+baseline_descriptives_not_last_year.plot
+```
+
+### Students regardless of last year's attendance
+
+#### Aggregated
+
+```{r baseline-plot-all-students-aggregated}
+#| echo: false
+#| include: false
+
+baseline_long_aggregated_all_students_aggregated.df <- 
+  baseline_long_by_participant.df %>% 
+  group_by(questionnaire, subscale, under_represented, prepost) %>% 
+  compute_dvs(score_aggregate)
+
+sample_sizes_all.df <- baseline_long_aggregated_all_students_aggregated.df %>% 
+  select(under_represented, n) %>% 
+  unique()
+n_nonhurm <- sample_sizes_all.df %>% filter(under_represented == "Non-\nHURM") %>% .$n
+n_hurm <- sample_sizes_all.df %>% filter(under_represented == "HURM") %>% .$n
+
+baseline_descriptives_all_students_aggregated.plot <- 
+  make_descriptive_plot(data = baseline_long_aggregated_all_students_aggregated.df, 
+                        title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
+                                            n_nonhurm, n_hurm), 
+                        version = "baseline")
+```
+
+```{r baseline-plot-all-students-aggregated-display}
+#| echo: false
+
+baseline_descriptives_all_students_aggregated.plot
+```
+
+#### Split by last year's attendance 
+
+```{r baseline-plot-any_attendance-split}
+#| echo: false
+#| include: false
+
+baseline_long_aggregated_all_students_split.df <- 
+  baseline_long_by_participant.df %>% 
+  group_by(questionnaire, subscale, under_represented, prepost, 
+           attend_sciexpo_last_year) %>% 
+  compute_dvs(score_aggregate)
+
+sample_sizes_all.df <- baseline_long_aggregated_all_students_split.df %>% 
+  select(under_represented, attend_sciexpo_last_year, n) %>% 
+  unique()
+n_nonhurm_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "Non-\nHURM" & attend_sciexpo_last_year == "Yes") %>% 
+  .$n
+n_nonhurm_not_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "Non-\nHURM" & attend_sciexpo_last_year == "No") %>% 
+  .$n
+n_hurm_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "HURM" & attend_sciexpo_last_year == "Yes") %>% 
+  .$n
+n_hurm_not_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "HURM" & attend_sciexpo_last_year == "No") %>% 
+  .$n
+
+baseline_long_aggregated_all_students_split.df <-  
+  baseline_long_aggregated_all_students_split.df %>% 
+  mutate(attend_sciexpo_last_year = 
+           ifelse(attend_sciexpo_last_year == "Yes", 
+                  "Attended\nlast year", "Did NOT attend\nlast year")) %>% 
+  mutate(attend_sciexpo_last_year = 
+           factor(attend_sciexpo_last_year, 
+                  levels = c("Did NOT attend\nlast year", "Attended\nlast year")))
+
+baseline_descriptives_all_students_split.plot <- 
+  make_descriptive_plot(baseline_long_aggregated_all_students_split.df, 
+                      title_str = sprintf("N(Non-HURM) = %i (Did NOT attend) / %i (Attended);\nN(HURM) = %i (Did NOT attend) / %i (Attended)",
+                                          n_nonhurm_not_last_year, n_nonhurm_last_year, 
+                                          n_hurm_not_last_year, n_hurm_last_year)) +
+  facet_grid(attend_sciexpo_last_year ~ subscale_str_for_plot)
+  
+```
+
+```{r baseline-plot-any_attendance-split-display}
+#| echo: false
+
+baseline_descriptives_all_students_split.plot
+```
+
+## Prepost descriptives
+
+```{r prepost-descriptives}
+#| echo: false
+#| include: false
+
+prepost_long_by_participant.df <- combined_long.df %>% 
+  filter(session_completed == "pre & post", 
+         !is.na(score)) %>%
+  group_by(survey_id, questionnaire, subscale, under_represented, prepost, 
+           attend_sciexpo_last_year, attend_sciexpo_this_year) %>% 
+  dplyr::summarise(score_aggregate = mean(score))
+```
+
+### Students who only attended this year
+
+```{r prepost-plot-only-this-year}
+#| echo: false
+#| include: false
+
+prepost_long_aggregated_correct_attendance.df <- prepost_long_by_participant.df %>% 
+  group_by(questionnaire, subscale, under_represented, prepost, 
+           attend_sciexpo_last_year, attend_sciexpo_this_year) %>% 
+  compute_dvs(score_aggregate)
+
+prepost_long_aggregated_correct_attendance.df <- 
+  prepost_long_aggregated_correct_attendance.df %>% 
+  filter(attend_sciexpo_last_year == "No" & attend_sciexpo_this_year == "Yes")
+
+sample_sizes_all.df <- prepost_long_aggregated_correct_attendance.df %>% 
+  select(under_represented, n) %>% 
+  unique()
+n_nonhurm <- sample_sizes_all.df %>% filter(under_represented == "Non-\nHURM") %>% .$n
+n_hurm <- sample_sizes_all.df %>% filter(under_represented == "HURM") %>% .$n
+
+
+prepost_descriptives_only_this_year.plot <- 
+    make_descriptive_plot(prepost_long_aggregated_correct_attendance.df, 
+                    title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
+                                        n_nonhurm, n_hurm))
+
+```
+
+```{r prepost-plot-only-this-year-display}
+#| echo: false
+
+prepost_descriptives_only_this_year.plot
+```
+
+### Students who attended this year, regardless of last year's attendance
+
+#### Aggregated
+
+```{r prepost-plot-any_attendance-aggregated}
+#| echo: false
+#| include: false
+
+prepost_long_aggregated_any_attendance.df <- 
+  prepost_long_by_participant.df %>% 
+  group_by(questionnaire, subscale, under_represented, prepost, 
+           attend_sciexpo_last_year, attend_sciexpo_this_year) %>% 
+  compute_dvs(score_aggregate)
+
+prepost_long_aggregated_any_attendance.df <- 
+  prepost_long_aggregated_any_attendance.df %>% 
+  filter(attend_sciexpo_this_year == "Yes")
+
+sample_sizes_all.df <- prepost_long_aggregated_any_attendance.df %>% 
+  select(under_represented, attend_sciexpo_last_year, n) %>% 
+  unique()
+n_nonhurm <- sample_sizes_all.df %>% filter(under_represented == "Non-\nHURM") %>% .$n %>% sum()
+n_hurm <- sample_sizes_all.df %>% filter(under_represented == "HURM") %>% .$n %>% sum()
+
+prepost_descriptives_any_attendance.plot <- 
+    make_descriptive_plot(prepost_long_aggregated_any_attendance.df, 
+                    title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
+                                        n_nonhurm, n_hurm))
+```
+
+```{r prepost-plot-any_attendance-aggregated-display}
+#| echo: false
+prepost_descriptives_any_attendance.plot
+
+```
+
+#### Split by last year's attendance 
+
+```{r prepost-plot-any_attendance-split}
+#| echo: false
+#| include: false
+
+prepost_long_split_any_attendance.df <- 
+  prepost_long_by_participant.df %>% 
+  group_by(questionnaire, subscale, under_represented, prepost, 
+           attend_sciexpo_last_year, attend_sciexpo_this_year) %>% 
+  compute_dvs(score_aggregate)
+
+prepost_long_split_any_attendance.df <- 
+  prepost_long_split_any_attendance.df %>% 
+  filter(attend_sciexpo_this_year == "Yes")
+
+sample_sizes_all.df <- prepost_long_split_any_attendance.df %>% 
+  select(under_represented, attend_sciexpo_last_year, n) %>% 
+  unique()
+n_nonhurm_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "Non-\nHURM" & attend_sciexpo_last_year == "Yes") %>% 
+  .$n
+n_nonhurm_not_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "Non-\nHURM" & attend_sciexpo_last_year == "No") %>% 
+  .$n
+n_hurm_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "HURM" & attend_sciexpo_last_year == "Yes") %>% 
+  .$n
+n_hurm_not_last_year <- 
+  sample_sizes_all.df %>% 
+  filter(under_represented == "HURM" & attend_sciexpo_last_year == "No") %>% 
+  .$n
+
+prepost_long_split_any_attendance.df <-  
+  prepost_long_split_any_attendance.df %>% 
+  mutate(attend_sciexpo_last_year = 
+           ifelse(attend_sciexpo_last_year == "Yes", 
+                  "Attended\nlast year", "Did NOT attend\nlast year")) %>% 
+  mutate(attend_sciexpo_last_year = 
+           factor(attend_sciexpo_last_year, 
+                  levels = c("Did NOT attend\nlast year", "Attended\nlast year")))
+
+prepost_descriptives_any_attendance_split.plot <- 
+  make_descriptive_plot(prepost_long_split_any_attendance.df, 
+                      title_str = sprintf("N(Non-HURM) = %i (Did NOT attend) / %i (Attended);\nN(HURM) = %i (Did NOT attend) / %i (Attended)",
+                                          n_nonhurm_not_last_year, n_nonhurm_last_year, 
+                                          n_hurm_not_last_year, n_hurm_last_year)) +
+  facet_grid(attend_sciexpo_last_year ~ subscale_str_for_plot)
+  
+```
+
+```{r prepost-plot-any_attendance-split-display}
+#| echo: false
+
+prepost_descriptives_any_attendance_split.plot
+```
+
+
+
+

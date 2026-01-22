@@ -1,0 +1,30 @@
+[
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Sci-Expo Survey 2025-2026",
+    "section": "",
+    "text": "In total, we collected responses from n_nonhurm students, with n_hurm from historically under-represented minorities (HURM) and n_nonhurm not from historically under-represented minorities (Non-HURM). Note that we do not have this information for n_hurm_na students because they only completed the post-test survey, and we only asked this information in the pre-test survey.\nThe number of participants who completed each survey is as follows:\n\n\n  session_completed  n\n1              post 22\n2               pre 24\n3        pre & post 57"
+  },
+  {
+    "objectID": "index.html#baseline-descriptives",
+    "href": "index.html#baseline-descriptives",
+    "title": "Sci-Expo Survey 2025-2026",
+    "section": "2.1 Baseline descriptives",
+    "text": "2.1 Baseline descriptives\n\n2.1.1 Students who did not attend last year\n\n\n\n\n\n\n\n\n\n\n\n2.1.2 Students regardless of last year’s attendance\n\n2.1.2.1 Aggregated\n\n\n\n\n\n\n\n\n\n\n\n2.1.2.2 Split by last year’s attendance"
+  },
+  {
+    "objectID": "index.html#prepost-descriptives",
+    "href": "index.html#prepost-descriptives",
+    "title": "Sci-Expo Survey 2025-2026",
+    "section": "2.2 Prepost descriptives",
+    "text": "2.2 Prepost descriptives\n\n2.2.1 Students who only attended this year\n\n\n\n\n\n\n\n\n\n\n\n2.2.2 Students who attended this year, regardless of last year’s attendance\n\n2.2.2.1 Aggregated\n\n\n\n\n\n\n\n\n\n\n\n2.2.2.2 Split by last year’s attendance"
+  }
+]
