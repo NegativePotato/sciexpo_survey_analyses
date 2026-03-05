@@ -1,5 +1,6 @@
 ---
 title: "About"
+author: "Freya Joessel"
 ---
 
-About this site
+Study conducted by Freya Joessel, Nicholas Vest, and Laura Jett within the [ALAN group](https://alaneuro.weebly.com/) at UW-Madison, WI, USA. 

@@ -1,8 +1,8 @@
 ---
 title: "Sci-Expo Survey 2025-2026"
-author: "Freya Joessel"
 editor: source
-date: today
+date: ""
+author: ""
 toc: true
 toc-depth: 5
 # toc-expand: true
@@ -17,7 +17,8 @@ format:
     html-math-method: katex
 ---
 
-# Quick facts
+# Demographics
+
 
 ```{r preamble}
 #| echo: false

@@ -1,6 +1,10 @@
 project:
   type: website
   output-dir: docs
+  render:
+    - index.qmd
+    - about.qmd
+    - study_info.qmd
 
 date: today
 toc: true
@@ -18,6 +22,8 @@ website:
     left:
       - href: index.qmd
         text: Home
+      - href: study_info.qmd
+        text: Study Info
       - about.qmd
 
 format:
