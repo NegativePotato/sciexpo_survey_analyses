@@ -184,6 +184,9 @@ combined_long.df <-
   
 write.csv(combined_long.df, file = file.path(table_dir, "all_participants_long.csv"))
 saveRDS(combined_long.df, file = file.path(table_dir, "all_participants_long.rds"))
+
+
+
 ```
 
 ```{r ids-which-sessions}
@@ -265,6 +268,19 @@ attend_last_year_count.df
 write.csv(combined_long_only_full_participants.df, file = file.path(table_dir, "participants_who_answered_both_surveys_long.csv"))
 saveRDS(combined_long_only_full_participants.df, file = file.path(table_dir, "participants_who_answered_both_surveys_long.rds"))
 
+
+combined_wide_only_full_participants.df <-
+  combined_long_only_full_participants.df %>% 
+  group_by(survey_id, under_represented, subscale, attend_sciexpo_this_year, 
+           attend_sciexpo_last_year, prepost, session_completed) %>% 
+  summarise(score = mean(score)) %>% 
+  tidyr::pivot_wider(names_from = c(subscale, prepost), 
+                     names_sep = "_", 
+                     values_from = score)
+
+write.csv(combined_wide_only_full_participants.df, file = file.path(table_dir, "participants_who_answered_both_surveys_wide.csv"))
+saveRDS(combined_wide_only_full_participants.df, file = file.path(table_dir, "participants_who_answered_both_surveys_wide.rds"))
+
 ```
 
 In total, we collected responses from `r n_nonhurm` students, with `r n_hurm` from historically under-represented minorities (HURM) and `r n_nonhurm` not from historically under-represented minorities (Non-HURM). Note that we do not have this information for `r n_hurm_na` students because they only completed the post-test survey, and we only asked this information in the pre-test survey. 
@@ -309,6 +325,19 @@ compute_dvs <- function(df, var) {
   return(output.df)
 }
 
+make_subscale_names_for_plot <- function(df) {
+  output.df <- df %>% 
+    mutate(subscale_str_for_plot = case_when(
+      subscale == "Competence" ~ "SSI\nCompetence", 
+      subscale == "Interest" ~ "SSI\nInterest", 
+      subscale == "Recognition" ~ "SSI\nRecognition", 
+      subscale == "Peformance" ~ "SSI\nPeformance", 
+      subscale == "likely_become_scientist" ~ "Likely\nScientist", 
+      subscale == "represented_in_science" ~ "Science\nRepresentation", 
+    ))
+  return(output.df)
+}
+
 ```
 
 ```{r descriptive-plot-function}
@@ -339,6 +368,35 @@ make_descriptive_plot <- function(data, title_str = NULL, version = "prepost") {
     
   return(prepost_descriptives.plot)
 }
+
+make_descriptive_violin_plot <- function(data, data_raw, title_str = NULL, version = "prepost") {
+  prepost_descriptives.plot <- ggplot(data = data) +
+    geom_violin(data = data_raw, 
+                aes(x = under_represented, y = score_aggregate, color = under_represented, alpha = prepost), 
+             position = position_dodge(width = 0.8)) + 
+    geom_jitter(data = data_raw, 
+                aes(x = under_represented, y = score_aggregate, color = under_represented, alpha = prepost), 
+                position = position_jitterdodge(jitter.width = 0.5, dodge.width = 0.8), size = 0.5) + 
+    geom_errorbar(aes(x = under_represented, ymin = ci95_low, ymax = ci95_high, group = prepost),
+                  position = position_dodge(width = 0.8), width = 0.3) +
+    geom_point(aes(x = under_represented, y = mean, group = prepost),
+                  position = position_dodge(width = 0.8), size = 3, shape = 4) + 
+    facet_grid(. ~ subscale_str_for_plot) + 
+    ylab("Score") + 
+    ylim(0,5) +
+    theme_bw() + 
+    theme(axis.title.x = element_blank(), legend.position = "none") + 
+    scale_color_manual(values = c("#648FFF", "#DC267F")) + 
+    scale_alpha_manual(values = c(0.7, 1))
+  
+  if(!is.null(title_str)) {
+    prepost_descriptives.plot <- prepost_descriptives.plot + 
+      ggtitle(title_str)
+  }
+    
+  return(prepost_descriptives.plot)
+}
+
 ```
 
 ## Baseline descriptives
@@ -382,12 +440,42 @@ baseline_descriptives_not_last_year.plot <-
                         title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
                                             n_nonhurm, n_hurm), 
                         version = "baseline")
+
+baseline_long_by_participant_not_last_year.df <- 
+  baseline_long_by_participant.df %>% 
+  filter(attend_sciexpo_last_year == "No") %>% 
+  make_subscale_names_for_plot()
+
+baseline_descriptives_not_last_year_violin.plot <- 
+  make_descriptive_violin_plot(
+    data = baseline_long_aggregated_not_last_year.df, 
+    data_raw = baseline_long_by_participant_not_last_year.df,
+    title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", n_nonhurm, n_hurm), 
+    version = "baseline")
+
+
 ```
 
 ```{r baseline-plot-not-last-year-display}
 #| echo: false
+#| fig-cap: "Baseline values for students who did not attend last year's expo - Bar plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
 
 baseline_descriptives_not_last_year.plot
+```
+
+```{r baseline-violin-plot-not-last-year-display}
+#| echo: false
+#| fig-cap: "Baseline values for students who did not attend last year's expo - Violin plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
+
+baseline_descriptives_not_last_year_violin.plot
 ```
 
 ### Students regardless of last year's attendance
@@ -414,12 +502,41 @@ baseline_descriptives_all_students_aggregated.plot <-
                         title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
                                             n_nonhurm, n_hurm), 
                         version = "baseline")
+
+
+baseline_long_by_participant_all.df <- 
+  baseline_long_by_participant.df %>% 
+  make_subscale_names_for_plot()
+
+baseline_descriptives_all_students_aggregated_violin.plot <- 
+  make_descriptive_violin_plot(
+    data = baseline_long_aggregated_all_students_aggregated.df, 
+    data_raw = baseline_long_by_participant_all.df,
+    title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", n_nonhurm, n_hurm), 
+    version = "baseline")
+
 ```
 
 ```{r baseline-plot-all-students-aggregated-display}
 #| echo: false
+#| fig-cap: "Baseline values for all students regardless of expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
 
 baseline_descriptives_all_students_aggregated.plot
+```
+
+```{r baseline-violin-plot-all-students-aggregated-display}
+#| echo: false
+#| fig-cap: "Baseline values for all students regardless of expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
+
+baseline_descriptives_all_students_aggregated_violin.plot
 ```
 
 #### Split by last year's attendance 
@@ -465,17 +582,52 @@ baseline_long_aggregated_all_students_split.df <-
 
 baseline_descriptives_all_students_split.plot <- 
   make_descriptive_plot(baseline_long_aggregated_all_students_split.df, 
-                      title_str = sprintf("N(Non-HURM) = %i (Did NOT attend) / %i (Attended);\nN(HURM) = %i (Did NOT attend) / %i (Attended)",
+                        title_str = sprintf("N(Non-HURM) = %i (Did NOT attend) / %i (Attended);\nN(HURM) = %i (Did NOT attend) / %i (Attended)",
                                           n_nonhurm_not_last_year, n_nonhurm_last_year, 
                                           n_hurm_not_last_year, n_hurm_last_year)) +
   facet_grid(attend_sciexpo_last_year ~ subscale_str_for_plot)
-  
+
+baseline_long_by_participant_all.df <- 
+  baseline_long_by_participant.df %>% 
+  make_subscale_names_for_plot() %>% 
+  mutate(attend_sciexpo_last_year = 
+           ifelse(attend_sciexpo_last_year == "Yes", 
+                  "Attended\nlast year", "Did NOT attend\nlast year")) %>% 
+  mutate(attend_sciexpo_last_year = 
+           factor(attend_sciexpo_last_year, 
+                  levels = c("Did NOT attend\nlast year", "Attended\nlast year")))
+
+baseline_descriptives_all_students_split_violin.plot <- 
+  make_descriptive_violin_plot(
+    data = baseline_long_aggregated_all_students_split.df, 
+    data_raw = baseline_long_by_participant_all.df,
+    title_str = sprintf("N(Non-HURM) = %i (Did NOT attend) / %i (Attended);\nN(HURM) = %i (Did NOT attend) / %i (Attended)", 
+                                          n_nonhurm_not_last_year, n_nonhurm_last_year, 
+                                          n_hurm_not_last_year, n_hurm_last_year)) +
+  facet_grid(attend_sciexpo_last_year ~ subscale_str_for_plot)
+
 ```
 
 ```{r baseline-plot-any_attendance-split-display}
 #| echo: false
+#| fig-cap: "Baseline values for all students split by last year's expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
 
 baseline_descriptives_all_students_split.plot
+```
+
+```{r baseline-violin-plot-any_attendance-split-display}
+#| echo: false
+#| fig-cap: "Baseline values for all students split by last year's expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
+
+baseline_descriptives_all_students_split_violin.plot
 ```
 
 ## Prepost descriptives
@@ -498,7 +650,8 @@ prepost_long_by_participant.df <- combined_long.df %>%
 #| echo: false
 #| include: false
 
-prepost_long_aggregated_correct_attendance.df <- prepost_long_by_participant.df %>% 
+prepost_long_aggregated_correct_attendance.df <- 
+  prepost_long_by_participant.df %>% 
   group_by(questionnaire, subscale, under_represented, prepost, 
            attend_sciexpo_last_year, attend_sciexpo_this_year) %>% 
   compute_dvs(score_aggregate)
@@ -519,12 +672,40 @@ prepost_descriptives_only_this_year.plot <-
                     title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
                                         n_nonhurm, n_hurm))
 
+prepost_long_by_participant_correct_attendance.df <- 
+  prepost_long_by_participant.df %>% 
+  make_subscale_names_for_plot() %>% 
+  filter(attend_sciexpo_last_year == "No" & attend_sciexpo_this_year == "Yes")
+
+prepost_descriptives_only_this_year_violin.plot <- 
+  make_descriptive_violin_plot(
+    data = prepost_long_aggregated_correct_attendance.df, 
+    data_raw = prepost_long_by_participant_correct_attendance.df,
+    title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
+                                        n_nonhurm, n_hurm))
+
 ```
 
 ```{r prepost-plot-only-this-year-display}
 #| echo: false
+#| fig-cap: "Prepost values for students who attended this year's exop and did not attend last year's expo - Bar plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
 
 prepost_descriptives_only_this_year.plot
+```
+
+```{r prepost-violin-plot-only-this-year-display}
+#| echo: false
+#| fig-cap: "Prepost values for students who attended this year's exop and did not attend last year's expo - Violin plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
+
+prepost_descriptives_only_this_year_violin.plot
 ```
 
 ### Students who attended this year, regardless of last year's attendance
@@ -555,12 +736,42 @@ prepost_descriptives_any_attendance.plot <-
     make_descriptive_plot(prepost_long_aggregated_any_attendance.df, 
                     title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
                                         n_nonhurm, n_hurm))
+
+
+prepost_long_by_participant_all.df <- 
+  prepost_long_by_participant.df %>% 
+  make_subscale_names_for_plot()
+
+prepost_descriptives_any_attendance_violin.plot <- 
+  make_descriptive_violin_plot(
+    data = prepost_long_aggregated_any_attendance.df, 
+    data_raw = prepost_long_by_participant_all.df,
+    title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
+                                        n_nonhurm, n_hurm))
+
 ```
 
 ```{r prepost-plot-any_attendance-aggregated-display}
 #| echo: false
+#| fig-cap: "Prepost values for all students regardless of expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
+
 prepost_descriptives_any_attendance.plot
 
+```
+
+```{r prepost-violin-plot-any_attendance-aggregated-display}
+#| echo: false
+#| fig-cap: "Prepost values for all students regardless of expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
+
+prepost_descriptives_any_attendance_violin.plot
 ```
 
 #### Split by last year's attendance 
@@ -614,15 +825,50 @@ prepost_descriptives_any_attendance_split.plot <-
                                           n_nonhurm_not_last_year, n_nonhurm_last_year, 
                                           n_hurm_not_last_year, n_hurm_last_year)) +
   facet_grid(attend_sciexpo_last_year ~ subscale_str_for_plot)
-  
+
+
+
+prepost_long_by_participant_all.df <- 
+  prepost_long_by_participant.df %>% 
+  make_subscale_names_for_plot() %>% 
+  mutate(attend_sciexpo_last_year = 
+           ifelse(attend_sciexpo_last_year == "Yes", 
+                  "Attended\nlast year", "Did NOT attend\nlast year")) %>% 
+  mutate(attend_sciexpo_last_year = 
+           factor(attend_sciexpo_last_year, 
+                  levels = c("Did NOT attend\nlast year", "Attended\nlast year")))
+
+prepost_descriptives_any_attendance_split_violin.plot <- 
+  make_descriptive_violin_plot(
+    data = prepost_long_split_any_attendance.df, 
+    data_raw = prepost_long_by_participant_all.df,
+    title_str = sprintf("N(Non-HURM) = %i (Did NOT attend) / %i (Attended);\nN(HURM) = %i (Did NOT attend) / %i (Attended)", 
+                                          n_nonhurm_not_last_year, n_nonhurm_last_year, 
+                                          n_hurm_not_last_year, n_hurm_last_year)) +
+  facet_grid(attend_sciexpo_last_year ~ subscale_str_for_plot)
+
 ```
 
 ```{r prepost-plot-any_attendance-split-display}
 #| echo: false
+#| fig-cap: "Prepost values for all students split by last year's expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
 
 prepost_descriptives_any_attendance_split.plot
 ```
 
+```{r prepost-violin-plot-any_attendance-split-display}
+#| echo: false
+#| fig-cap: "Prepost values for all students split by last year's expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| cap-location: margin
+#| out.width: "70%"
+#| fig.align: "center"
+#| cache: true
 
+prepost_descriptives_any_attendance_split_violin.plot
+```
 
 
