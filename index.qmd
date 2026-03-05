@@ -370,7 +370,9 @@ make_descriptive_plot <- function(data, title_str = NULL, version = "prepost") {
   return(prepost_descriptives.plot)
 }
 
-make_descriptive_violin_plot <- function(data, data_raw, title_str = NULL, version = "prepost") {
+make_descriptive_violin_plot <- function(data, data_raw, title_str = NULL, version = "prepost", 
+                                         color_scale = c("#648FFF", "#DC267F")) {
+
   prepost_descriptives.plot <- ggplot(data = data) +
     geom_violin(data = data_raw, 
                 aes(x = under_represented, y = score_aggregate, color = under_represented, alpha = prepost), 
@@ -387,7 +389,7 @@ make_descriptive_violin_plot <- function(data, data_raw, title_str = NULL, versi
     ylim(0,5) +
     theme_bw() + 
     theme(axis.title.x = element_blank(), legend.position = "none") + 
-    scale_color_manual(values = c("#648FFF", "#DC267F")) + 
+    scale_color_manual(values = color_scale) + 
     scale_alpha_manual(values = c(0.7, 1))
   
   if(!is.null(title_str)) {
@@ -872,4 +874,63 @@ prepost_descriptives_any_attendance_split.plot
 prepost_descriptives_any_attendance_split_violin.plot
 ```
 
+# Analyses 
 
+## Science Representation
+
+First, let's focus on *Science Representation*, the only measure that seems to show any difference between pre-test and post-test. We performed a Repeated-Measure ANOVA with Time (pre/post) as within-subject factor and Minority Status (HURM/Non-HURM) as between-subject factor on all subjects who attended the expo in 2025 (this year) regardless of attendance in 2024 (last year). We found a main effect of time (F(1, 55)=14.49, p<0.001, eta^2^=0.034) and Minority Status (F(1, 55)=14.49, p<0.001, eta^2^=0.193), while the interaction was not significant (F(1, 55)=2.82, p=0.01, eta^2^=0.007).
+
+Post-hoc tests revealed that *Science Representation* was increased for the whole sample from pre-test to post-test (t(55) = 3.806, p < 0.001), with a medium effect size (Cohen's d = 0.417, CI95 = [0.185; 0.649]). *Science Representation* was also higher for the Non-HURM sutdents compared to the HURM students (t(55) = 4.081, p < 0.001), with a very large effect size (Cohen's d = 0.999, CI95 = [0.473; 1.526]),  P-values are adjusted with Holm's correction.
+
+
+```{r science-rpz-only-violin-plot-with-signif}
+
+
+prepost_descriptives_any_attendance_violin_rpz_in_science.plot <- 
+  make_descriptive_violin_plot(
+    data = prepost_long_aggregated_any_attendance.df %>% 
+      filter(subscale == "represented_in_science") %>% 
+      mutate(under_represented = paste(under_represented, prepost, sep = "-"), 
+             under_represented = factor(under_represented, 
+                                        levels = c("Non-\nHURM-pre", "Non-\nHURM-post", "HURM-pre", "HURM-post"))), 
+    data_raw = prepost_long_by_participant_all.df  %>% 
+      filter(subscale == "represented_in_science") %>% 
+      mutate(under_represented = paste(under_represented, prepost, sep = "-"), 
+             under_represented = factor(under_represented, 
+                                        levels = c("Non-\nHURM-pre", "Non-\nHURM-post", "HURM-pre", "HURM-post"))), 
+    title_str = sprintf("N(Non-HURM) = %i; N(HURM) = %i", 
+                                        n_nonhurm, n_hurm), 
+    color_scale = c("#648FFF", "#648FDF", "#DC267F", "#DC265F")) + 
+  geom_signif(
+    data =prepost_long_by_participant_all.df  %>% 
+      filter(subscale == "represented_in_science") %>% 
+      mutate(under_represented = paste(under_represented, prepost, sep = "-"), 
+             under_represented = factor(under_represented, 
+                                        levels = c("Non-\nHURM-pre", "Non-\nHURM-post", "HURM-pre", "HURM-post"))), 
+    mapping = aes(x = under_represented, y = score_aggregate),
+    annotations = c("n.s", "p = 0.010", "p < 0.001", "p = 0.003"), 
+    comparisons = list(c("HURM-pre", "HURM-post"), 
+                       c("HURM-pre", "Non-\nHURM-pre"),
+                       c("HURM-post", "Non-\nHURM-post"),
+                       c("Non-\nHURM-pre", "Non-\nHURM-post")),
+    y_position = c(5.1, 5.6, 6.1, 5.1),
+    map_signif_level = T      # Manually set the vertical position (optional)
+  ) +
+  ylim(NA, 6.5)
+
+```
+
+```{r science-rpz-only-violin-plot-with-signif-display}
+#| echo: false
+#| fig-cap: "Prepost values for all students regardless last year's expo attendance for Science Representation. The difference between HURM and Non-HURM student is significant, as well as the overall pre-post effect. P-values come from post-hoc t-tests. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
+#| cap-location: margin
+#| out.width: "95%"
+#| fig.align: "center"
+#| cache: true
+
+prepost_descriptives_any_attendance_violin_rpz_in_science.plot
+
+```
+
+
+## Can we use the 8 students who did not attend this year’s expo as a ctrl grp?

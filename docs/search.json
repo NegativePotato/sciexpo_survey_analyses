@@ -33,5 +33,19 @@
     "title": "About",
     "section": "",
     "text": "Study conducted by Freya Joessel, Nicholas Vest, and Laura Jett within the ALAN group at UW-Madison, WI, USA."
+  },
+  {
+    "objectID": "index.html#science-representation",
+    "href": "index.html#science-representation",
+    "title": "Sci-Expo Survey 2025-2026",
+    "section": "3.1 Science Representation",
+    "text": "3.1 Science Representation\nFirst, let’s focus on Science Representation, the only measure that seems to show any difference between pre-test and post-test. We performed a Repeated-Measure ANOVA with Time (pre/post) as within-subject factor and Minority Status (HURM/Non-HURM) as between-subject factor on all subjects who attended the expo in 2025 (this year) regardless of attendance in 2024 (last year). We found a main effect of time (F(1, 55)=14.49, p&lt;0.001, eta2=0.034) and Minority Status (F(1, 55)=14.49, p&lt;0.001, eta2=0.193), while the interaction was not significant (F(1, 55)=2.82, p=0.01, eta2=0.007).\nPost-hoc tests revealed that Science Representation was increased for the whole sample from pre-test to post-test (t(55) = 3.806, p &lt; 0.001), with a medium effect size (Cohen’s d = 0.417, CI95 = [0.185; 0.649]). Science Representation was also higher for the Non-HURM sutdents compared to the HURM students (t(55) = 4.081, p &lt; 0.001), with a very large effect size (Cohen’s d = 0.999, CI95 = [0.473; 1.526]), P-values are adjusted with Holm’s correction.\n\n\nCode\nprepost_descriptives_any_attendance_violin_rpz_in_science.plot &lt;- \n  make_descriptive_violin_plot(\n    data = prepost_long_aggregated_any_attendance.df %&gt;% filter(subscale == \"represented_in_science\"), \n    data_raw = prepost_long_by_participant_all.df  %&gt;% filter(subscale == \"represented_in_science\"),\n    title_str = sprintf(\"N(Non-HURM) = %i; N(HURM) = %i\", \n                                        n_nonhurm, n_hurm))\nprepost_descriptives_any_attendance_violin_rpz_in_science.plot"
+  },
+  {
+    "objectID": "index.html#section",
+    "href": "index.html#section",
+    "title": "Sci-Expo Survey 2025-2026",
+    "section": "3.2 ",
+    "text": "3.2"
   }
 ]

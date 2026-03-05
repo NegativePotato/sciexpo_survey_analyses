@@ -21,6 +21,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -138,6 +173,11 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#split-by-last-years-attendance-1" id="toc-split-by-last-years-attendance-1" class="nav-link" data-scroll-target="#split-by-last-years-attendance-1"><span class="header-section-number">2.2.2.2</span> Split by last year’s attendance</a></li>
   </ul></li>
   </ul></li>
+  </ul></li>
+  <li><a href="#analyses" id="toc-analyses" class="nav-link" data-scroll-target="#analyses"><span class="header-section-number">3</span> Analyses</a>
+  <ul>
+  <li><a href="#science-representation" id="toc-science-representation" class="nav-link" data-scroll-target="#science-representation"><span class="header-section-number">3.1</span> Science Representation</a></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"><span class="header-section-number">3.2</span> </a></li>
   </ul></li>
   </ul>
 </nav>
@@ -503,10 +543,40 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-
-
 </section>
 </section>
+</section>
+</section>
+<section id="analyses" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Analyses</h1>
+<section id="science-representation" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="science-representation"><span class="header-section-number">3.1</span> Science Representation</h2>
+<p>First, let’s focus on <em>Science Representation</em>, the only measure that seems to show any difference between pre-test and post-test. We performed a Repeated-Measure ANOVA with Time (pre/post) as within-subject factor and Minority Status (HURM/Non-HURM) as between-subject factor on all subjects who attended the expo in 2025 (this year) regardless of attendance in 2024 (last year). We found a main effect of time (F(1, 55)=14.49, p&lt;0.001, eta<sup>2</sup>=0.034) and Minority Status (F(1, 55)=14.49, p&lt;0.001, eta<sup>2</sup>=0.193), while the interaction was not significant (F(1, 55)=2.82, p=0.01, eta<sup>2</sup>=0.007).</p>
+<p>Post-hoc tests revealed that <em>Science Representation</em> was increased for the whole sample from pre-test to post-test (t(55) = 3.806, p &lt; 0.001), with a medium effect size (Cohen’s d = 0.417, CI95 = [0.185; 0.649]). <em>Science Representation</em> was also higher for the Non-HURM sutdents compared to the HURM students (t(55) = 4.081, p &lt; 0.001), with a very large effect size (Cohen’s d = 0.999, CI95 = [0.473; 1.526]), P-values are adjusted with Holm’s correction.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>prepost_descriptives_any_attendance_violin_rpz_in_science.plot <span class="ot">&lt;-</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">make_descriptive_violin_plot</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> prepost_long_aggregated_any_attendance.df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(subscale <span class="sc">==</span> <span class="st">"represented_in_science"</span>), </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">data_raw =</span> prepost_long_by_participant_all.df  <span class="sc">%&gt;%</span> <span class="fu">filter</span>(subscale <span class="sc">==</span> <span class="st">"represented_in_science"</span>),</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title_str =</span> <span class="fu">sprintf</span>(<span class="st">"N(Non-HURM) = %i; N(HURM) = %i"</span>, </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                        n_nonhurm, n_hurm))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>prepost_descriptives_any_attendance_violin_rpz_in_science.plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="section" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="section"><span class="header-section-number">3.2</span> </h2>
+
+
 </section>
 </section>
 
