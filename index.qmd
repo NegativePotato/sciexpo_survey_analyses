@@ -458,9 +458,9 @@ baseline_descriptives_not_last_year_violin.plot <-
 
 ```{r baseline-plot-not-last-year-display}
 #| echo: false
-#| fig-cap: "Baseline values for students who did not attend last year's expo - Bar plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Baseline values for students who did not attend last year's expo - Bar plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -469,9 +469,9 @@ baseline_descriptives_not_last_year.plot
 
 ```{r baseline-violin-plot-not-last-year-display}
 #| echo: false
-#| fig-cap: "Baseline values for students who did not attend last year's expo - Violin plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Baseline values for students who did not attend last year's expo - Violin plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -519,9 +519,9 @@ baseline_descriptives_all_students_aggregated_violin.plot <-
 
 ```{r baseline-plot-all-students-aggregated-display}
 #| echo: false
-#| fig-cap: "Baseline values for all students regardless of expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Baseline values for all students regardless of expo attendance - Bar plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -530,9 +530,9 @@ baseline_descriptives_all_students_aggregated.plot
 
 ```{r baseline-violin-plot-all-students-aggregated-display}
 #| echo: false
-#| fig-cap: "Baseline values for all students regardless of expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Baseline values for all students regardless of expo attendance - Violin plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -610,9 +610,9 @@ baseline_descriptives_all_students_split_violin.plot <-
 
 ```{r baseline-plot-any_attendance-split-display}
 #| echo: false
-#| fig-cap: "Baseline values for all students split by last year's expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Baseline values for all students split by last year's expo attendance - Bar plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -621,9 +621,9 @@ baseline_descriptives_all_students_split.plot
 
 ```{r baseline-violin-plot-any_attendance-split-display}
 #| echo: false
-#| fig-cap: "Baseline values for all students split by last year's expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Baseline values for all students split by last year's expo attendance - Violin plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -688,9 +688,9 @@ prepost_descriptives_only_this_year_violin.plot <-
 
 ```{r prepost-plot-only-this-year-display}
 #| echo: false
-#| fig-cap: "Prepost values for students who attended this year's exop and did not attend last year's expo - Bar plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Prepost values for students who attended this year's exop and did not attend last year's expo - Bar plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -699,9 +699,9 @@ prepost_descriptives_only_this_year.plot
 
 ```{r prepost-violin-plot-only-this-year-display}
 #| echo: false
-#| fig-cap: "Prepost values for students who attended this year's exop and did not attend last year's expo - Violin plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Prepost values for students who attended this year's exop and did not attend last year's expo - Violin plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -753,9 +753,9 @@ prepost_descriptives_any_attendance_violin.plot <-
 
 ```{r prepost-plot-any_attendance-aggregated-display}
 #| echo: false
-#| fig-cap: "Prepost values for all students regardless of expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Prepost values for all students regardless of expo attendance - Bar plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -765,9 +765,9 @@ prepost_descriptives_any_attendance.plot
 
 ```{r prepost-violin-plot-any_attendance-aggregated-display}
 #| echo: false
-#| fig-cap: "Prepost values for all students regardless of expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Prepost values for all students regardless of expo attendance - Violin plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -851,9 +851,9 @@ prepost_descriptives_any_attendance_split_violin.plot <-
 
 ```{r prepost-plot-any_attendance-split-display}
 #| echo: false
-#| fig-cap: "Prepost values for all students split by last year's expo attendance - Bar plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Prepost values for all students split by last year's expo attendance - Bar plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
@@ -862,9 +862,9 @@ prepost_descriptives_any_attendance_split.plot
 
 ```{r prepost-violin-plot-any_attendance-split-display}
 #| echo: false
-#| fig-cap: "Prepost values for all students split by last year's expo attendance - Violin plot. HURM -> Historically Under-Represented Minority."
+#| fig-cap: "Prepost values for all students split by last year's expo attendance - Violin plot. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
 #| cap-location: margin
-#| out.width: "70%"
+#| out.width: "95%"
 #| fig.align: "center"
 #| cache: true
 
