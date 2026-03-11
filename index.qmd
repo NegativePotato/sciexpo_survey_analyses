@@ -938,7 +938,9 @@ prepost_analyses_any_attendance_violin_rpz_in_science.plot
 
 Ideally, to ensure that any effect observed on our DVs (and specifically *Science Representation*) is not due to any factor that may have naturally occurred during the 4 weeks between the pre-test and post-test survey (other than the Science Expo), we would compare the pre-post change in *Science Representation* between students that attended the expo and matched students who did not attend the expo. While we did not include such a group in our original design, eight (8) students in our sample completed the pre-test and post-test surveys but did not attend the expo.
 
-Note that out of these 8 students, 2 are Non-HURM and 6 are HURM students. Because of this very low sample in the sample of participants who did not attend the expo this year, we do not split this analysis between Non-HURM and HRUM students. 
+Note that out of these 8 students, 2 are Non-HURM and 6 are HURM students. Because of this very low sample in the sample of participants who did not attend the expo this year, we do not split this analysis between Non-HURM and HRUM students. While the interaction is not significant (due to the very small size of the group of students who did not attend last year's expo), numerically it seems that the group who did not attend this expo this year did not see any change in *Science Representation* compared to the group who did attend the expo this year. 
+
+We note that almost all students who did not attend the expo this year reported below average values in *Science Representation*, and thus it is possible that the reason why we do not see any difference between pre-test and post-test for this group is that they might either be not interested in research in the first place, and so their feeling of *Science Representation* possibly cannot be changed anyway. 
 
 ```{r science-rpz-only-violin-plot-with-not-attended-group}
 #| echo: false
@@ -988,7 +990,7 @@ prepost_analyses_any_attendance_violin_rpz_in_science.plot <-
 
 ```{r science-rpz-only-violin-plot-with-not-attended-group-display}
 #| echo: false
-#| fig-cap: "Prepost values for all students regardless last year's expo attendance for Science Representation. The difference between HURM and Non-HURM student is significant, as well as the overall pre-post effect. P-values come from post-hoc t-tests. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
+#| fig-cap: "Pre-test and post-test Science Representation of students who attended this year's expo compare to student who did not attend this year's expo (ad hoc control group), included all students regardless of last year's expo attendance or minority status. Error bars are 95CI."
 #| cap-location: margin
 #| out.width: "95%"
 #| fig.align: "center"
