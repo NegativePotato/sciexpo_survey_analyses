@@ -1002,3 +1002,73 @@ prepost_analyses_any_attendance_violin_rpz_in_science.plot
 
 ```
 
+
+# Open-Feedback Analyses
+
+```{r}
+#| include: false
+#| echo: false
+
+combined_long.df <- readRDS(file = file.path(table_dir, "all_participants_long.rds")) 
+combined_long_feedback.df <- combined_long.df %>% 
+  filter(prepost == "post", 
+         questionnaire %in% 
+           c("feelings_change_after_sciexpo", 
+             "sciexpo_most_valuable_aspects",
+             "sciexpo_other_comments",
+             "sciexpo_what_to_improve"), 
+         attend_sciexpo_this_year == "Yes", 
+         !is.na(response)) %>% 
+  select(survey_id, prepost, questionnaire, response, subscale, under_represented, attend_sciexpo_this_year, attend_sciexpo_last_year) %>% 
+  mutate(under_represented = gsub("\n", "", under_represented, fixed = T)) %>% 
+  arrange(questionnaire, under_represented)
+
+```
+
+## Feelings Change After Expo
+
+Question : *After attending the Science Expo, how has seeing yourself being represented, or not represented, in the scientific community influenced your perception or feelings about your own place in science?*
+
+```{r feelings-change-table-display}
+#| echo: false
+
+knitr::kable(combined_long_feedback.df %>% 
+               filter(questionnaire == "feelings_change_after_sciexpo") %>% 
+               select(response, under_represented))
+```
+
+## Most Valuable Aspects
+
+Question : *What aspects of the Science Expo did you find most valuable? *
+
+```{r most-valubale-aspects-table-display}
+#| echo: false
+
+knitr::kable(combined_long_feedback.df %>% 
+               filter(questionnaire == "sciexpo_most_valuable_aspects") %>% 
+               select(response, under_represented))
+```
+
+## What to Improve
+
+Question : *What aspects of the Expo would you improve and how?*
+
+```{r what-to-improve-table-display}
+#| echo: false
+
+knitr::kable(combined_long_feedback.df %>% 
+               filter(questionnaire == "sciexpo_what_to_improve") %>% 
+               select(response, under_represented))
+```
+
+## Other Comments
+
+Question : *Any other comments or reflections you want to share with the organizers?*
+
+```{r other-comments-table-display}
+#| echo: false
+
+knitr::kable(combined_long_feedback.df %>% 
+               filter(questionnaire == "sciexpo_other_comments") %>% 
+               select(response, under_represented))
+```
