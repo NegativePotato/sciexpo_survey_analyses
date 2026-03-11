@@ -17,8 +17,6 @@ format:
     html-math-method: katex
 ---
 
-# Demographics
-
 
 ```{r preamble}
 #| echo: false
@@ -65,6 +63,7 @@ responses_str_to_nbr <- function(response_str) {
 }
 ```
 
+# Demographics
 
 ```{r merge-datasets}
 #| echo: false
@@ -884,9 +883,10 @@ Post-hoc tests revealed that *Science Representation* was increased for the whol
 
 
 ```{r science-rpz-only-violin-plot-with-signif}
+#| include: false
+#| echo: false
 
-
-prepost_descriptives_any_attendance_violin_rpz_in_science.plot <- 
+prepost_analyses_any_attendance_violin_rpz_in_science.plot <- 
   make_descriptive_violin_plot(
     data = prepost_long_aggregated_any_attendance.df %>% 
       filter(subscale == "represented_in_science") %>% 
@@ -916,7 +916,7 @@ prepost_descriptives_any_attendance_violin_rpz_in_science.plot <-
     y_position = c(5.1, 5.6, 6.1, 5.1),
     map_signif_level = T      # Manually set the vertical position (optional)
   ) +
-  ylim(NA, 6.5)
+  ylim(0, 6.5)
 
 ```
 
@@ -928,9 +928,74 @@ prepost_descriptives_any_attendance_violin_rpz_in_science.plot <-
 #| fig.align: "center"
 #| cache: true
 
-prepost_descriptives_any_attendance_violin_rpz_in_science.plot
+prepost_analyses_any_attendance_violin_rpz_in_science.plot
 
 ```
 
 
 ## Can we use the 8 students who did not attend this year’s expo as a ctrl grp?
+
+Ideally, to ensure that any effect observed on our DVs (and specifically *Science Representation*) is not due to any factor that may have naturally occurred during the 4 weeks between the pre-test and post-test survey (other than the Science Expo), we would compare the pre-post change in *Science Representation* between students that attended the expo and matched students who did not attend the expo. While we did not include such a group in our original design, eight (8) students in our sample completed the pre-test and post-test surveys but did not attend the expo.
+
+Note that out of these 8 students, 2 are Non-HURM and 6 are HURM students. Because of this very low sample in the sample of participants who did not attend the expo this year, we do not split this analysis between Non-HURM and HRUM students. 
+
+```{r science-rpz-only-violin-plot-with-not-attended-group}
+#| echo: false
+#| include: false
+
+combined_long_only_full_participants.df <- 
+  readRDS(file = file.path(table_dir, "participants_who_answered_both_surveys_long.rds"))
+
+
+combined_long_only_full_participants_science_rpz.df <- 
+  combined_long_only_full_participants.df %>% 
+  filter(questionnaire == "represented_in_science") %>% 
+  rename(score_aggregate = score)
+
+combined_long_only_full_participants_science_rpz_aggregated.df <- 
+  combined_long_only_full_participants_science_rpz.df %>% 
+  group_by(questionnaire, subscale, prepost,
+           attend_sciexpo_this_year) %>% 
+  compute_dvs(score_aggregate)
+
+
+prepost_analyses_any_attendance_violin_rpz_in_science.plot <- 
+  ggplot(data = combined_long_only_full_participants_science_rpz_aggregated.df) +
+  geom_violin(data = combined_long_only_full_participants_science_rpz.df, 
+              aes(x = attend_sciexpo_this_year, y = score_aggregate, color = prepost), 
+           position = position_dodge(width = 0.8)) + 
+  geom_jitter(data = combined_long_only_full_participants_science_rpz.df, 
+              aes(x = attend_sciexpo_this_year, y = score_aggregate, color = prepost), 
+              position = position_jitterdodge(jitter.width = 0.5, dodge.width = 0.8), size = 0.5) + 
+  geom_errorbar(aes(x = attend_sciexpo_this_year, ymin = ci95_low, ymax = ci95_high, group = prepost),
+                position = position_dodge(width = 0.8), width = 0.2) +
+  geom_point(aes(x = attend_sciexpo_this_year, y = mean, group = prepost),
+                position = position_dodge(width = 0.8), size = 3, shape = 4) + 
+  geom_line(aes(x = attend_sciexpo_this_year, y = mean, group = attend_sciexpo_this_year), 
+            position = position_dodge2(width = 0.8)) + 
+  facet_grid(. ~ subscale_str_for_plot) + 
+  ylab("Score") + 
+  ylim(0,5) +
+  theme_bw() + 
+  theme(axis.title.x = element_blank(), legend.position = "none") + 
+  scale_color_manual(values = c("pre" = "#999999", "post" = "#000000")) + 
+  scale_x_discrete(labels = c("No" = "Did NOT Attend Expo\nThis Year (2025)", 
+                              "Yes" = "Attended Expo\nThis Year (2025)"))
+  
+```
+
+
+```{r science-rpz-only-violin-plot-with-not-attended-group-display}
+#| echo: false
+#| fig-cap: "Prepost values for all students regardless last year's expo attendance for Science Representation. The difference between HURM and Non-HURM student is significant, as well as the overall pre-post effect. P-values come from post-hoc t-tests. HURM -> Historically Under-Represented Minority. Error bars are 95CI"
+#| cap-location: margin
+#| out.width: "95%"
+#| fig.align: "center"
+#| cache: true
+
+
+prepost_analyses_any_attendance_violin_rpz_in_science.plot
+
+
+```
+
