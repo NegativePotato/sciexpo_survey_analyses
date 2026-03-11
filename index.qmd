@@ -1029,6 +1029,9 @@ combined_long_feedback.df <- combined_long.df %>%
 
 Question : *After attending the Science Expo, how has seeing yourself being represented, or not represented, in the scientific community influenced your perception or feelings about your own place in science?*
 
+Mixed results, quick look at the table seems to show about half of the students had their feelings changes and the other half not really. Overall, I would say enough students report being motivated by this expo to pursue their careers that it seems worth it. 
+
+
 ```{r feelings-change-table-display}
 #| echo: false
 
@@ -1041,6 +1044,10 @@ knitr::kable(combined_long_feedback.df %>%
 
 Question : *What aspects of the Science Expo did you find most valuable? *
 
+- Variety of booths, 
+- Interactivity
+- Candies
+
 ```{r most-valubale-aspects-table-display}
 #| echo: false
 
@@ -1052,6 +1059,13 @@ knitr::kable(combined_long_feedback.df %>%
 ## What to Improve
 
 Question : *What aspects of the Expo would you improve and how?*
+
+Main themes : 
+- More hands-on tables
+- More tables overall
+- More candy
+- A bunch of people said they liked it, and one of them even said they'd want more throughout the year :D 
+- One comment about pronouns
 
 ```{r what-to-improve-table-display}
 #| echo: false
