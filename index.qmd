@@ -23,6 +23,7 @@ format:
 #| include: false
 
 library(ggplot2)
+library(ggsignif)
 library(dplyr)
 library(readxl)
 library(here)
