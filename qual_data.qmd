@@ -1,0 +1,239 @@
+---
+title: "Sci-Expo Survey 2025-2026 - Qual. Data"
+editor: source
+date: ""
+author: ""
+toc: true
+toc-depth: 5
+# toc-expand: true
+number-sections: true
+highlight-style: pygments
+toc-location: left
+reference-location: margin
+citation-location: margin
+format:
+  html: 
+    code-fold: true
+    html-math-method: katex
+---
+
+```{r preamble}
+#| echo: false
+#| include: false
+
+library(ggplot2)
+library(ggsignif)
+library(dplyr)
+library(readxl)
+library(here)
+library(Hmisc)
+
+data_dir <- file.path(here(), "Data", "Qualitative Data")
+table_dir <- file.path(here(), "Tables")
+```
+
+```{r load-tables}
+#| echo: false
+#| include: false
+
+id_corresp.df <- read.csv(file.path(data_dir, "qual_data_id_correspondance_table.csv"))
+
+improvements.df <- read.csv(file.path(data_dir, "coding_spreadhseet_improvements.csv"))
+  
+most_valuable.df <- read_excel(path = file.path(data_dir, "coding_most_valuable_spreadsheet.xlsx"), 
+                               sheet = "most_valuable_clean")
+
+feelings_change.df <- read.csv(file.path(data_dir, "Nick_Abbie_Expo Codes_corrected NAs.csv"))
+feelings_change_codes.df <- read_excel(path = file.path(data_dir, "coding spreadsheets_Nick Abbie.xlsx"), 
+                                       sheet = "Codes")
+
+all_participants_long.df <- readRDS(file.path(table_dir, "all_participants_long.rds"))
+all_participants_demographics.df <- all_participants_long.df %>% 
+  select(survey_id, under_represented, current_grade, ap_science_enrolled) %>% 
+  unique() %>% 
+  merge(id_corresp.df %>% select(-count))
+
+count_underrepresented.df <- all_participants_demographics.df %>% 
+  count(under_represented) %>% 
+  tidyr::pivot_wider(names_from = under_represented, values_from = n)
+
+```
+
+# Qualitative Analyses
+
+## Feelings Change
+
+```{r clean-table-feelings-changes}
+#| echo: false
+#| include: false
+
+
+# feelings_change_codes_clean.df <- feelings_change.df %>% 
+#   select(qual_analysis_Id, attend_sciexpo_this_year, 
+#          attend_sciexpo_last_year, code1_general, code2_general, 
+#          code3_general, code4_general, notes) %>% 
+#   mutate(across(everything(), as.character)) %>%
+#   tidyr::pivot_longer(cols = -one_of("qual_analysis_Id", "attend_sciexpo_this_year", 
+#                                      "attend_sciexpo_last_year"), 
+#                       names_to = "code_column", 
+#                       values_to = "theme_num") %>% 
+#   merge(feelings_change_codes.df, all = T) %>% 
+#   arrange(qual_analysis_Id) %>% 
+#   relocate(qual_analysis_Id) %>% 
+#   select(-one_of("code_column", "theme_num")) %>%
+#   mutate(theme_txt = ifelse(is.na(theme_txt), "no_theme", theme_txt), 
+#          value = 1) %>%
+#   unique() %>%
+#   tidyr::pivot_wider(names_from =  theme_txt, 
+#                      names_prefix = "FC ", 
+#                      values_from = value) %>% 
+#   select(!contains("no_theme"))
+# 
+# feelings_change_valence_clean.df <- feelings_change.df %>% 
+#   select(qual_analysis_Id, rep_valence)
+
+
+feelings_change_codes_clean.df <- feelings_change.df %>% 
+  select(qual_analysis_Id, attend_sciexpo_this_year, 
+         attend_sciexpo_last_year, rep_valence,  
+         code1_general, code2_general, 
+         code3_general, code4_general) %>% 
+  mutate(across(everything(), as.character)) %>%
+  tidyr::pivot_longer(cols = -one_of("qual_analysis_Id", "attend_sciexpo_this_year", 
+                                     "attend_sciexpo_last_year", "rep_valence"), 
+                      names_to = "code_column", 
+                      values_to = "theme_num") %>% 
+  merge(feelings_change_codes.df, all = T) %>% 
+  arrange(qual_analysis_Id) %>% 
+  relocate(qual_analysis_Id) %>% 
+  select(-one_of("code_column")) %>%
+  mutate(theme_num = ifelse(theme_num == "", NA, theme_num)) %>% 
+  unique() %>% 
+  filter(is.na(theme_num) | theme_num != 0) %>%
+  rename(fc_theme_num = theme_num, 
+         fc_theme_txt = theme_txt,
+         fc_valence = rep_valence) %>%
+  merge(all_participants_demographics.df)
+
+
+
+feelings_change_count.df <- feelings_change_codes_clean.df %>%
+  count(fc_theme_txt, fc_theme_num, under_represented) %>% 
+  tidyr::pivot_wider(names_from = under_represented, values_from = n) %>% 
+  mutate(fc_theme_num = factor(fc_theme_num, levels = c("1", "1a", "1b", "1c", 
+                                                        "1d", "2", "3", "4", "5",
+                                                        "6", "7", "8", "9", "10", 
+                                                        "11"))) %>% 
+  arrange(fc_theme_num) %>% 
+  bind_rows(count_underrepresented.df %>% mutate(fc_theme_txt = "Total"))
+
+
+feelings_change_valence_count.df <- feelings_change_codes_clean.df %>%
+  count(fc_valence, under_represented) %>% 
+  mutate(under_represented = ifelse(is.na(under_represented), "NA", under_represented)) %>% 
+  tidyr::pivot_wider(names_from = under_represented, values_from = n) %>% 
+  bind_rows(count_underrepresented.df %>% mutate(fc_valence = "Total"))
+
+```
+
+```{r clean-table-feelings-changes-display}
+#| echo: false
+#| tbl-cap: "Summary table of what impacted students' feelings by under-represented category"
+
+knitr::kable(feelings_change_count.df, format = "html")
+
+```
+
+```{r clean-table-feelings-changes-valance-display}
+#| echo: false
+#| tbl-cap: "Summary table of  how students' feelings change by under-represented category"
+
+knitr::kable(feelings_change_valence_count.df, format = "html")
+
+```
+
+## Improvements
+
+```{r clean-table-improvements}
+#| echo: false
+#| include: false
+
+improvements_clean.df <- improvements.df %>% 
+  select(qual_analysis_Id, attend_sciexpo_last_year, attend_sciexpo_this_year, 
+         valence, no_improvements, more_interactive, more_stations, 
+         more_structure, more_diverse_science , physical_space, 
+         length_frequency, more_diverse_identities, make_optional, 
+         less_stations) %>% 
+  tidyr::pivot_longer(cols = -one_of("qual_analysis_Id", "attend_sciexpo_this_year", 
+                                     "attend_sciexpo_last_year", "valence"), 
+                      names_to = "imp_theme_txt", 
+                      values_to = "value", 
+                      values_drop_na = T) %>%
+  select(-value) %>% 
+  rename(imp_valence = valence) %>%
+  merge(all_participants_demographics.df)
+
+improvements_count.df <- improvements_clean.df %>%
+  count(imp_theme_txt, under_represented) %>% 
+  tidyr::pivot_wider(names_from = under_represented, values_from = n) %>% 
+  bind_rows(count_underrepresented.df %>% mutate(imp_theme_txt = "Total"))
+
+improvements_valence_count.df <- improvements_clean.df %>%
+  count(imp_valence, under_represented) %>% 
+  tidyr::pivot_wider(names_from = under_represented, values_from = n) %>% 
+  bind_rows(count_underrepresented.df %>% mutate(imp_valence = "Total"))
+
+
+
+```
+
+```{r clean-table-improvements-display}
+#| echo: false
+#| tbl-cap: "Summary table of improvement themes by under-represented category"
+
+knitr::kable(improvements_count.df, format = "html")
+
+```
+
+```{r clean-table-improvements-valence-display}
+#| echo: false
+#| tbl-cap: "Summary table of the valence of improvement themes by under-represented category"
+
+knitr::kable(improvements_valence_count.df, format = "html")
+
+```
+
+## Most Valuable Aspects
+
+```{r clean-table-most-valuable}
+#| echo: false
+#| include: false
+
+most_valuable_clean.df <- most_valuable.df %>% 
+  select(qual_analysis_Id, attend_sciexpo_last_year, attend_sciexpo_this_year, 
+         Interactive_Fun, Talking_With_Real_Researchers, Practical_Information, 
+         Diversity_of_topics, Diversity_of_People, Enthusiasm_Passion, 
+         Specific_Demonstrations, Learning_about_things) %>% 
+  tidyr::pivot_longer(cols = -one_of("qual_analysis_Id", "attend_sciexpo_this_year", 
+                                     "attend_sciexpo_last_year"), 
+                      names_to = "mv_theme_txt", 
+                      values_to = "value", 
+                      values_drop_na = T) %>%
+  select(-value) %>%
+  merge(all_participants_demographics.df)
+
+
+most_valuable_count.df <- most_valuable_clean.df %>%
+  count(mv_theme_txt, under_represented) %>% 
+  tidyr::pivot_wider(names_from = under_represented, values_from = n) %>% 
+  bind_rows(count_underrepresented.df %>% mutate(mv_theme_txt = "Total"))
+
+```
+
+```{r clean-table-most-valuable-display}
+#| echo: false
+#| tbl-cap: "Summary table of most valuable aspects by under-represented category"
+
+knitr::kable(most_valuable_count.df, format = "html")
+
+```

@@ -3,6 +3,7 @@ project:
   output-dir: docs
   render:
     - index.qmd
+    - qual_data.qmd
     - about.qmd
     - study_info.qmd
 
@@ -21,7 +22,9 @@ website:
   navbar:
     left:
       - href: index.qmd
-        text: Home
+        text: Quant. data
+      - href: qual_data.qmd
+        text: Qual. Data
       - href: study_info.qmd
         text: Study Info
       - about.qmd
